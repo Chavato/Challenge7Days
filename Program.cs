@@ -1,64 +1,48 @@
-﻿using System.Globalization;
-using System.Numerics;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Challenge7Days.Models;
 using Challenge7Days.Models.Common;
-using RestSharp;
-
+using Challenge7Days.Services;
 
 const string API_URL = "https://pokeapi.co/api/v2/pokemon/";
 
 try
 {
     Console.WriteLine("Starting Application");
-    RestClient client = new RestClient(API_URL);
 
-    RestRequest initialRequest = new RestRequest("", Method.Get);
+    HttpService httpService = new HttpService(API_URL);
 
-    Console.WriteLine("Starting search about all pokemons.");
-    RestResponse response = client.Get(initialRequest);
-
-    if (response.StatusCode != System.Net.HttpStatusCode.OK)
-        throw new Exception("Error");
-
-    if (response.Content == null)
-        throw new Exception("response content is missing.");
+    string responseContent = httpService.Get();
 
     JsonSerializerOptions options = new JsonSerializerOptions()
     {
         PropertyNameCaseInsensitive = true
     };
 
-    PokemonResponse? pokemonsResponse = JsonSerializer.Deserialize<PokemonResponse>(response.Content, options);
+    PokemonResponse? pokemonsResponse = JsonSerializer.Deserialize<PokemonResponse>(responseContent, options);
 
     if (pokemonsResponse == null)
         throw new Exception("Was not possible deserialize pokemon response");
 
     List<GenericInfo> pokemonsSimplified = new List<GenericInfo>(pokemonsResponse.Results);
 
-    // if (pokemonsResponse.Next != null)
-    // {
-    //     string nextUrl = pokemonsResponse.Next;
+    if (pokemonsResponse.Next != null)
+    {
+        string nextUrl = pokemonsResponse.Next;
 
-    //     while (nextUrl != null)
-    //     {
-    //         RestRequest requestLoop = new RestRequest(nextUrl, Method.Get);
+        while (nextUrl != null)
+        {
+            string response = httpService.Get(nextUrl);
 
-    //         RestResponse responseLoop = client.Get(requestLoop);
+            PokemonResponse? pokemonsLoop = JsonSerializer.Deserialize<PokemonResponse>(response, options);
 
-    //         if (responseLoop.Content == null)
-    //             throw new ArgumentNullException("Content from response is null.");
+            if (pokemonsLoop == null)
+                throw new Exception("It was not possible deserialize Pokemon Response");
 
-    //         PokemonResponse? pokemonsLoop = JsonSerializer.Deserialize<PokemonResponse>(responseLoop.Content, options);
+            pokemonsSimplified.AddRange(pokemonsLoop.Results);
 
-    //         if (pokemonsLoop == null)
-    //             throw new Exception("It was not possible deserialize Pokemon Response");
-
-    //         pokemonsSimplified.AddRange(pokemonsLoop.Results);
-
-    //         nextUrl = pokemonsLoop.Next;
-    //     }
-    // }
+            nextUrl = pokemonsLoop.Next;
+        }
+    }
 
     Console.WriteLine("Starting search about random pokemon details.");
     IList<GenericInfo> pokemonToChooseSimplified = new List<GenericInfo>();
@@ -73,13 +57,9 @@ try
 
     for (int i = 0; i < pokemonToChooseSimplified.Count; i++)
     {
-        RestRequest pokemonInformationRequest = new RestRequest(pokemonToChooseSimplified[i].Url, Method.Get);
-        RestResponse pokemonInformationResponse = client.Get(pokemonInformationRequest);
+        string response = httpService.Get(pokemonToChooseSimplified[i].Url);
 
-        if (pokemonInformationResponse.Content == null)
-            throw new ArgumentNullException("Content from response is null.");
-
-        Pokemon? pokemonDeserialized = JsonSerializer.Deserialize<Pokemon>(pokemonInformationResponse.Content, options);
+        Pokemon? pokemonDeserialized = JsonSerializer.Deserialize<Pokemon>(response, options);
 
         if (pokemonDeserialized == null)
             throw new Exception("It was not possible deserialize Pokemon Information Response");
