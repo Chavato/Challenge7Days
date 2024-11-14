@@ -1,5 +1,8 @@
-﻿using System.Text.Json;
+﻿using System.Globalization;
+using System.Numerics;
+using System.Text.Json;
 using Challenge7Days.Models;
+using Challenge7Days.Models.Common;
 using RestSharp;
 
 
@@ -31,7 +34,7 @@ try
     if (pokemonsResponse == null)
         throw new Exception("Was not possible deserialize pokemon response");
 
-    List<PokemonSimplified> pokemonsSimplified = new List<PokemonSimplified>(pokemonsResponse.Results);
+    List<GenericInfo> pokemonsSimplified = new List<GenericInfo>(pokemonsResponse.Results);
 
     // if (pokemonsResponse.Next != null)
     // {
@@ -58,7 +61,7 @@ try
     // }
 
     Console.WriteLine("Starting search about random pokemon details.");
-    IList<PokemonSimplified> pokemonToChooseSimplified = new List<PokemonSimplified>();
+    IList<GenericInfo> pokemonToChooseSimplified = new List<GenericInfo>();
 
     Random random = new Random();
 
@@ -68,9 +71,9 @@ try
 
     IList<Pokemon> pokemons = new List<Pokemon>();
 
-    foreach (var pokemon in pokemonToChooseSimplified)
+    for (int i = 0; i < pokemonToChooseSimplified.Count; i++)
     {
-        RestRequest pokemonInformationRequest = new RestRequest(pokemon.Url, Method.Get);
+        RestRequest pokemonInformationRequest = new RestRequest(pokemonToChooseSimplified[i].Url, Method.Get);
         RestResponse pokemonInformationResponse = client.Get(pokemonInformationRequest);
 
         if (pokemonInformationResponse.Content == null)
@@ -82,17 +85,35 @@ try
             throw new Exception("It was not possible deserialize Pokemon Information Response");
 
         pokemons.Add(pokemonDeserialized);
-
-        System.Console.WriteLine();
-        System.Console.WriteLine($"About {pokemon.Name}:\r\n{pokemonDeserialized}");
+        Console.WriteLine();
+        Console.WriteLine($"{i + 1} - {pokemonToChooseSimplified[i].Name}:\r\n{pokemonDeserialized}");
     }
+
+    bool repeat = false;
+    int pokemonNumber;
+    do
+    {
+        Console.WriteLine();
+        Console.WriteLine("With Pokemon do you choose? Digit its number.");
+        string? pokemonString = Console.ReadLine();
+        repeat = false;
+
+        if (!int.TryParse(pokemonString, out pokemonNumber) || pokemonNumber < 1 || pokemonNumber > 3)
+        {
+            Console.WriteLine("You can only digit 1, 2, or 3. Try it again.");
+            repeat = true;
+        }
+    }
+    while (repeat);
+
+    Console.WriteLine($"You choose {pokemonToChooseSimplified[pokemonNumber - 1].Name}, congratulations!");
 
 }
 
 catch (Exception err)
 {
-    System.Console.WriteLine(err.Message);
+    Console.WriteLine(err.Message);
     if (err.InnerException != null)
-        System.Console.WriteLine(err.InnerException.Message);
+        Console.WriteLine(err.InnerException.Message);
 }
 

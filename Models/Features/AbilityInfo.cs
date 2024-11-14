@@ -1,3 +1,5 @@
+using Challenge7Days.Models.Common;
+
 namespace Challenge7Days.Models.Features
 {
     public class AbilityInfo
