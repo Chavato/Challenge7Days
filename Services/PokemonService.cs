@@ -1,6 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using Challenge7Days.Extensions;
 using Challenge7Days.Models;
 using Challenge7Days.Models.Common;
 
