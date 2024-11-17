@@ -1,14 +1,11 @@
-﻿using System.Text.Json;
-using Challenge7Days.Models;
+﻿using Challenge7Days.Models;
 using Challenge7Days.Models.Common;
 using Challenge7Days.Services;
 
-const string API_URL = "https://pokeapi.co/api/v2/pokemon/";
-
 try
 {
-
     PokemonService pokemonService = new PokemonService();
+
     UserInteractionService userInteractionService = new UserInteractionService();
 
     Task<List<GenericInfo>> allPokemonsSimplifiedTask = pokemonService.GetAllPokemonsSimplified();
