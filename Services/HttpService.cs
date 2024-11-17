@@ -26,5 +26,19 @@ namespace Challenge7Days.Services
 
             return response.Content;
         }
+
+        public async Task<string> GetAsync(string route = "")
+        {
+            RestRequest request = new RestRequest(route, Method.Get);
+            RestResponse response = await Client.GetAsync(request);
+
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                throw new Exception("Error, status code is not as expected.");
+
+            if (response.Content == null)
+                throw new Exception("response content is missing.");
+
+            return response.Content;
+        }
     }
 }
